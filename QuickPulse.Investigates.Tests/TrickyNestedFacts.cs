@@ -5,7 +5,6 @@ namespace QuickPulse.Investigates.Tests
 {
     public class TrickyNestedFacts
     {
-        // Dictionary key with value-based equality
         private sealed class Key
         {
             public int Id { get; }
