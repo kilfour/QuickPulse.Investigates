@@ -5,11 +5,6 @@ namespace QuickPulse.Investigates;
 
 public static class Is
 {
-    // public static bool Primitive(object obj, PrimitivesRegistry registry)
-    // {
-    //     return registry.HasType(obj.GetType());
-    // }
-
     public static bool Collection(object obj)
     {
         return obj is IEnumerable && obj.GetType() != typeof(string);
@@ -36,6 +31,5 @@ public static class Is
     public static bool Tuple(object obj)
     {
         return obj is ITuple;
-        // return obj.GetType().FullName!.StartsWith("System.ValueTuple");
     }
 }

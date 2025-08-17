@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using QuickPulse.Bolts;
 using QuickPulse.Show;
 
@@ -24,7 +23,7 @@ public static class The
 
     private readonly static Flow<Pair> Collection =
         from input in Pulse.Start<Pair>()
-        from _ in Pulse.ToFlow(Element, Zip.ToIndexedPairs(input))
+        from _ in Pulse.ToFlow(Element, Get.IndexedPairs(input))
         select input;
 
     private readonly static Flow<ObjectProperty> Property =
@@ -41,23 +40,12 @@ public static class The
 
     private readonly static Flow<Pair> Dictionary =
         from input in Pulse.Start<Pair>()
-        from _ in Pulse.ToFlow(KeyValue, Zip.DictionaryEntries(input))
+        from _ in Pulse.ToFlow(KeyValue, Get.DictionaryEntries(input))
         select input;
 
     private readonly static Flow<Pair> Tuple =
         from input in Pulse.Start<Pair>()
-        let left = input.This as ITuple
-        let right = input.That as ITuple
-        let len = Math.Max(left?.Length ?? 0, right?.Length ?? 0)
-        from _ in Pulse.ToFlow(
-            KeyValue,
-            Enumerable.Range(0, len)
-                .Select(i =>
-                {
-                    var lv = i < (left?.Length ?? 0) ? left[i] : null;
-                    var rv = i < (right?.Length ?? 0) ? right[i] : null;
-                    return new ObjectProperty($"[{i}]", new Pair(lv!, rv!));
-                }))
+        from _ in Pulse.ToFlow(KeyValue, Get.TupleObjectProperties(input))
         select input;
 
     private readonly static Flow<Pair> Object =
