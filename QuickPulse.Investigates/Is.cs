@@ -5,15 +5,11 @@ namespace QuickPulse.Investigates;
 
 public static class Is
 {
-    public static bool Collection(object obj)
-    {
-        return obj is IEnumerable && obj.GetType() != typeof(string);
-    }
+    public static bool Collection(object obj) =>
+        obj is IEnumerable && obj.GetType() != typeof(string);
 
-    public static bool Dictionary(object obj)
-    {
-        return obj.GetType().GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
-    }
+    public static bool Dictionary(object obj) =>
+        obj.GetType().GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
 
     public static bool KeyValuePair(object obj)
     {
@@ -28,8 +24,5 @@ public static class Is
         if (type == typeof(string)) return false;
         return type.IsClass;
     }
-    public static bool Tuple(object obj)
-    {
-        return obj is ITuple;
-    }
+    public static bool Tuple(object obj) => obj is ITuple;
 }

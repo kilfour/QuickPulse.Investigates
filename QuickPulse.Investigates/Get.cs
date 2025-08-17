@@ -27,10 +27,7 @@ public static class Get
         var left = pair.This as ITuple;
         var right = pair.That as ITuple;
         var len = Math.Max(left?.Length ?? 0, right?.Length ?? 0);
-        return
-            Enumerable.Range(0, len)
-                .Select(i => GetObjectProperty(i, left, right));
-
+        return Enumerable.Range(0, len).Select(i => GetObjectProperty(i, left, right));
         static ObjectProperty GetObjectProperty(int i, ITuple? left, ITuple? right)
         {
             var leftValue = i < (left?.Length ?? 0) ? left?[i] : null;
@@ -44,12 +41,10 @@ public static class Get
         var L = AsSeq(pair.This).ToList();
         var R = AsSeq(pair.That).ToList();
         var len = Math.Max(L.Count, R.Count);
-
         return Enumerable.Range(0, len)
             .Select(i => (i, new Pair(
                 i < L.Count ? L[i]! : null!,
                 i < R.Count ? R[i]! : null!)));
-
         static IEnumerable<object?> AsSeq(object? enumerable) =>
             enumerable is null || enumerable is string
                 ? [] : (enumerable as IEnumerable)?.Cast<object?>() ?? [];
@@ -59,22 +54,17 @@ public static class Get
     {
         var leftPairs = EnumeratePairs(p.This).ToList();
         var rightPairs = EnumeratePairs(p.That).ToList();
-
         var eq = EqFrom(p.This) ?? EqFrom(p.That) ?? EqualityComparer<object?>.Default;
-
         var seen = new HashSet<object?>(eq);
         var allKeys = new List<object?>();
         foreach (var k in leftPairs.Select(kv => kv.key)) if (seen.Add(k)) allKeys.Add(k);
         foreach (var k in rightPairs.Select(kv => kv.key)) if (seen.Add(k)) allKeys.Add(k);
-
         foreach (var k in allKeys)
         {
             var left = leftPairs.FirstOrDefault(kv => eq.Equals(kv.key, k));
             var right = rightPairs.FirstOrDefault(kv => eq.Equals(kv.key, k));
-
             var leftValue = left.exists ? left.value : null;
             var rightValue = right.exists ? right.value : null;
-
             yield return new ObjectProperty($"[key:{FormatKey(k)}]", new Pair(leftValue!, rightValue!));
         }
 
@@ -112,13 +102,11 @@ public static class Get
             return null;
         }
 
-        static string FormatKey(object? key)
-        {
-            return key is string s ? $"\"{s}\"" : Introduce.This(key!, false);
-        }
+        static string FormatKey(object? key) =>
+            key is string s ? $"\"{s}\"" : Introduce.This(key!, false);
     }
 
-    public class BoxedEq : IEqualityComparer<object?>
+    private class BoxedEq : IEqualityComparer<object?>
     {
         private readonly IEqualityComparer _ic;
         public BoxedEq(IEqualityComparer ic) => _ic = ic;

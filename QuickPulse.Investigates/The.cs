@@ -59,7 +59,7 @@ public static class The
         from flowContext in Pulse.Gather(new FlowContext())
         from _ in Pulse.FirstOf(
             (() => input.This == null,                            /**/ () => Pulse.ToFlow(Default, input)),
-            (() => flowContext.Value.AlreadyVisited(input.This),  /**/ () => Pulse.NoOp()),
+            (() => flowContext.Value.AlreadyVisited(input),       /**/ () => Pulse.NoOp()),
             (() => Is.Dictionary(input.This),                     /**/ () => Pulse.ToFlow(Dictionary, input)),
             (() => Is.Collection(input.This),                     /**/ () => Pulse.ToFlow(Collection, input)),
             (() => Is.Tuple(input.This),                          /**/ () => Pulse.ToFlow(Tuple, input)),
@@ -67,7 +67,7 @@ public static class The
             (() => true,                                          /**/ () => Pulse.ToFlow(Default, input)))
         select input;
 
-    public static Flow<Pair> Go(FlowContext FlowContext) =>
+    public static Flow<Pair> Flow(FlowContext FlowContext) =>
         from input in Pulse.Start<Pair>()
         from _ in Pulse.Gather(FlowContext)
         from __ in Pulse.ToFlow(Dispatch, input)
