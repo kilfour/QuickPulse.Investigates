@@ -95,7 +95,8 @@ public class DictionaryFacts
         // Expect keys sorted: 1 (value diff), 2 (missing on left), 3 (missing on right)
         var reader = LinesReader.FromText(findings.Report);
         Assert.Equal("Map[key:1]: 1 /= 2", reader.NextLine());
-        Assert.Equal("Map[key:2]: null /= 2", reader.NextLine());
         Assert.Equal("Map[key:3]: 3 /= null", reader.NextLine());
+        Assert.Equal("Map[key:2]: null /= 2", reader.NextLine());
+
     }
 }

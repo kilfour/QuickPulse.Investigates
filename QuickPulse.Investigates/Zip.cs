@@ -21,46 +21,75 @@ public static class Zip
         enumerable is null || enumerable is string
             ? [] : (enumerable as IEnumerable)?.Cast<object?>() ?? [];
 
-    public static IEnumerable<ObjectProperty> DictionaryEntries(Pair pair)
+    public static IEnumerable<ObjectProperty> DictionaryEntries(Pair p)
     {
-        var left = ToMap(pair.This);
-        var right = ToMap(pair.That);
+        var leftPairs = EnumeratePairs(p.This).ToList();
+        var rightPairs = EnumeratePairs(p.That).ToList();
 
-        var allKeys = left.Keys.Concat(right.Keys)
-                            .Distinct(EqualityComparer<object?>.Default)
-                            .OrderBy(k => k);
-        foreach (var key in allKeys)
+        var eq = EqFrom(p.This) ?? EqFrom(p.That) ?? EqualityComparer<object?>.Default;
+
+        // Build deterministic union without sorting (avoids heterogeneous key compare errors)
+        var seen = new HashSet<object?>(eq);
+        var allKeys = new List<object?>();
+        foreach (var k in leftPairs.Select(kv => kv.key)) if (seen.Add(k)) allKeys.Add(k);
+        foreach (var k in rightPairs.Select(kv => kv.key)) if (seen.Add(k)) allKeys.Add(k);
+
+        foreach (var k in allKeys)
         {
-            left.TryGetValue(key, out var leftValue);
-            right.TryGetValue(key, out var rightValue);
-            yield return new ObjectProperty($"[key:{FormatKey(key)}]", new Pair(leftValue!, rightValue!));
-        }
-    }
+            var l = leftPairs.FirstOrDefault(kv => eq.Equals(kv.key, k));
+            var r = rightPairs.FirstOrDefault(kv => eq.Equals(kv.key, k));
 
-    private static IDictionary<object?, object?> ToMap(object? dict)
-    {
-        var map = new Dictionary<object, object?>(EqualityComparer<object?>.Default);
-        if (dict is null) return map!;
+            var lv = l.exists ? l.value : null;
+            var rv = r.exists ? r.value : null;
 
-        if (dict is IDictionary id)
-        {
-            foreach (DictionaryEntry e in id) map[e.Key] = e.Value;
-            return map!;
+            yield return new ObjectProperty($"[key:{FormatKey(k)}]", new Pair(lv!, rv!));
         }
 
-        if (dict is IEnumerable seq)
+        // --- helpers ---
+        static IEnumerable<(object? key, object? value, bool exists)> EnumeratePairs(object? dict)
         {
-            foreach (var kv in seq)
+            if (dict is null)
+                yield break;
+
+            if (dict is IDictionary id)
             {
-                var t = kv?.GetType();
-                var k = t?.GetProperty("Key", BindingFlags.Instance | BindingFlags.Public)?.GetValue(kv);
-                var v = t?.GetProperty("Value", BindingFlags.Instance | BindingFlags.Public)?.GetValue(kv);
-                if (t is not null) map[k!] = v;
+                foreach (DictionaryEntry e in id)
+                    yield return (e.Key, e.Value, true);
+                yield break;
+            }
+
+            if (dict is IEnumerable seq)
+            {
+                foreach (var kv in seq)
+                {
+                    var t = kv?.GetType();
+                    var kProp = t?.GetProperty("Key", BindingFlags.Public | BindingFlags.Instance);
+                    var vProp = t?.GetProperty("Value", BindingFlags.Public | BindingFlags.Instance);
+                    if (kProp is null || vProp is null) continue;
+                    yield return (kProp.GetValue(kv), vProp.GetValue(kv), true);
+                }
             }
         }
-        return map!;
+
+        static IEqualityComparer<object?>? EqFrom(object? dict)
+        {
+            if (dict is null) return null;
+            var prop = dict.GetType().GetProperty("Comparer", BindingFlags.Instance | BindingFlags.Public);
+            if (prop?.GetValue(dict) is IEqualityComparer ic)
+                return new BoxedEq(ic);
+            return null;
+        }
     }
 
     static string FormatKey(object? k)
         => k is string s ? $"\"{s}\"" : Introduce.This(k!, false);
+
+    sealed class BoxedEq : IEqualityComparer<object?>
+    {
+        private readonly IEqualityComparer _ic;
+        public BoxedEq(IEqualityComparer ic) => _ic = ic;
+        public new bool Equals(object? x, object? y) => _ic.Equals(x, y);
+        public int GetHashCode(object? obj) => _ic.GetHashCode(obj!);
+    }
+
 }
