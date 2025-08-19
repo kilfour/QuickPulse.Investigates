@@ -1,2 +1,2 @@
 # QuickPulse.Investigates
-Some objects are more equal than others.
+> Some objects are more equal than others.

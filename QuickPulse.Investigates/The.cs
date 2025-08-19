@@ -58,7 +58,7 @@ public static class The
         from input in Pulse.Start<Pair>()
         from flowContext in Pulse.Gather(new FlowContext())
         from _ in Pulse.FirstOf(
-            (() => input.This == null,                            /**/ () => Pulse.ToFlow(Default, input)),
+            (() => input.This == null || input.That == null,      /**/ () => Pulse.ToFlow(Default, input)),
             (() => flowContext.Value.AlreadyVisited(input),       /**/ () => Pulse.NoOp()),
             (() => Is.Dictionary(input.This),                     /**/ () => Pulse.ToFlow(Dictionary, input)),
             (() => Is.Collection(input.This),                     /**/ () => Pulse.ToFlow(Collection, input)),
