@@ -25,8 +25,6 @@ public record FlowContext
         return !visited.Add(new RefPair(pair.This, pair.That));
     }
 
-
-
     private readonly struct RefPair(object l, object r)
     {
         public readonly object L = l;
